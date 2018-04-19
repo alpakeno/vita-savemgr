@@ -20,7 +20,9 @@ static int handler(void* out,
                    const char* section, const char* name, const char* value) {
     configure *p = (configure*)out;
 
-    if (strcmp(name, "base") == 0) {
+	if (strcmp(name, "root") == 0) {
+        p->root = strdup(value);
+    } else if (strcmp(name, "base") == 0) {
         p->base = strdup(value);
     } else if (strcmp(name, "slot_format") == 0) {
         p->slot_format = strdup(value);
@@ -37,7 +39,9 @@ void load_config() {
     sceAppMgrAppParamGetString(0, 12, app_titleid , 16);
 
     ini_parse(CONFIG_FILE, handler, &config);
-
+    if (!config.root) {
+        config.root = strdup(DEFAULT_ROOT_SAVEDIR);
+    }
     if (!config.base) {
         config.base = strdup(DEFAULT_BASE_SAVEDIR);
     }
@@ -51,6 +55,7 @@ void load_config() {
 
 void save_config() {
     FILE *f = fopen(CONFIG_FILE, "w");
+	fprintf(f, "%s = %s\n", "root", config.root);
     fprintf(f, "%s = %s\n", "base", config.base);
     fprintf(f, "%s = %s\n", "slot_format", config.slot_format);
     fprintf(f, "%s = %s\n", "list_mode", config.list_mode);

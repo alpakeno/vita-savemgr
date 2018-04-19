@@ -120,6 +120,7 @@
 #define OLD_RINCHEAT_SAVE_FORMAT      "%s_SAVEDATA"
 #define OLD_RINCHEAT_SAVE_SLOT_FORMAT "%s_SAVEDATA_SLOT_%d"
 
+#define DEFAULT_ROOT_SAVEDIR          "ux0"
 #define DEFAULT_BASE_SAVEDIR          "/data/savegames"
 #define DEFAULT_SAVE_SLOT_FORMAT      "%s/SLOT%d"
 #define DEFAULT_LIST_MODE             "icon"

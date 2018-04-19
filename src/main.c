@@ -83,7 +83,7 @@ int select_row = 0;
 int select_col = 0;
 int select_appinfo_button = 0;
 int select_slot = 0;
-int select_config = 2;
+int select_config = 3;
 
 char *save_dir_path(const appinfo *info) {
     //if (strncmp(info->dev, "gro0", 4) == 0) {
@@ -110,7 +110,7 @@ char *slot_dir_path(const appinfo *info, int slot) {
     char *path = calloc(sizeof(char), 1);
     aprintf(&t0, "%s/%s", config.base, config.slot_format);
     aprintf(&t1, t0, info->title_id, slot);
-    aprintf(&path, "ux0:%s", t1);
+    aprintf(&path, "%s:%s", config.root, t1);
     free(t1);
     free(t0);
     return path;
@@ -122,7 +122,7 @@ char *slot_sfo_path(const appinfo *info, int slot) {
     char *path = calloc(sizeof(char), 1);
     aprintf(&t0, "%s/%s/sce_sys/param.sfo", config.base, config.slot_format);
     aprintf(&t1, t0, info->title_id, slot);
-    aprintf(&path, "ux0:%s", t1);
+    aprintf(&path, "%s:%s", config.root, t1);
     free(t1);
     free(t0);
     return path;
@@ -277,10 +277,11 @@ struct config_item {
 
 void draw_config() {
     struct config_item items[] = {
+		{"Root",            config.root},
         {"Base",            config.base},
         {"Slot Format",     config.slot_format},
         {"View Mode",       config.list_mode},
-        {"Use button only", config.use_dpad ? "true" : "false"},
+        {"Use Button Only", config.use_dpad ? "true" : "false"},
     };
     // FIXME: ugly UI
     vita2d_draw_rectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, BLACK);
@@ -507,7 +508,7 @@ ScreenState on_mainscreen_event_with_touch(int steps, int *step, appinfo **curr,
     }
 
     if (btn & SCE_CTRL_RTRIGGER) {
-        select_config = 2;
+        select_config = 3;
         return CONFIG_SCREEN;
     }
 
@@ -678,16 +679,16 @@ ScreenState on_config_event() {
 
     if (btn & SCE_CTRL_UP) {
         select_config -= 1;
-        if (select_config < 2) {
-            select_config = 2;
+        if (select_config < 3) {
+            select_config = 3;
         }
         return UNKNOWN;
     }
 
     if (btn & SCE_CTRL_DOWN) {
         select_config += 1;
-        if (select_config >= 4) {
-            select_config = 3;
+        if (select_config >= 5) {
+            select_config = 4;
         }
         return UNKNOWN;
     }
@@ -696,9 +697,10 @@ ScreenState on_config_event() {
         switch (select_config) {
             case 0:
             case 1:
+			case 2:
                 // TODO text dialog
                 break;
-            case 2:
+            case 3:
                 if (strncmp(config.list_mode, "icon", 4) == 0) {
                     strncpy(config.list_mode, "list", 4);
                     mainscreen_list_mode = USE_LIST;
@@ -709,7 +711,7 @@ ScreenState on_config_event() {
                 need_refresh = 1;
                 need_save = 1;
                 break;
-            case 3:
+            case 4:
                 config.use_dpad = !config.use_dpad;
                 need_refresh = 1;
                 need_save = 1;
@@ -1225,21 +1227,21 @@ int mainloop() {
                     new_state = slot_state_machine(curr, choose,
                                                    BACKUP_MODE, BACKUP_CONFIRM,
                                                    BACKUP_PROGRESS, BACKUP_FAIL,
-                                                   "Backup savedata to slot %d",
+                                                   "Backup SaveData to Slot %d",
                                                    copy_savedata_to_slot);
                     break;
                 case RESTORE_MODE:
                     new_state = slot_state_machine(curr, choose,
                                                    RESTORE_MODE, RESTORE_CONFIRM,
                                                    RESTORE_PROGRESS, RESTORE_FAIL,
-                                                   "Restore savedata from slot %d",
+                                                   "Restore SaveData from Slot %d",
                                                    copy_slot_to_savedata);
                     break;
                 case DELETE_MODE:
                     new_state = slot_state_machine(curr, choose,
                                                    DELETE_MODE, DELETE_CONFIRM,
                                                    DELETE_PROGRESS, DELETE_FAIL,
-                                                   "Delete save slot %d",
+                                                   "Delete Save Slot %d",
                                                    delete_slot);
                     break;
                 case FORMAT_MODE:
@@ -1248,7 +1250,7 @@ int mainloop() {
                                                      FORMAT_PROGRESS,
                                                      FORMAT_FAIL,
                                                      PRINT_APPINFO,
-                                                     "Format game savedata",
+                                                     "Format Game SaveData",
                                                      format_savedata);
                     break;
                 case RELOAD_MAINSCREEN:
@@ -1298,11 +1300,11 @@ int main() {
     load_config();
 
     char *base_path = calloc(sizeof(char), 1);
-    aprintf(&base_path, "ux0:%s", config.base);
+    aprintf(&base_path, "%s:%s", config.root, config.base);
     mkdir(base_path, 0777);
     free(base_path);
-    mkdir("ux0:/data/savemgr", 0777);
-
+    //mkdir("ux0:/data/savemgr", 0777); not needed?
+	
     sceAppMgrUmount("app0:");
     sceAppMgrUmount("savedata0:");
 
